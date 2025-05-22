@@ -17,16 +17,32 @@ def check_col(object):
 
 
 def get_size(object):
-    size_x = 0
-    size_y = 1
-    x = 0
-    for i in object:
-      if i != -1:
-            x += 1
-      else:
-            if x > size_x:
-                  size_x = x
-            x = 0
-            size_y += 1
+    matrix = flat_to_matrix(object)
+    size_x = len(matrix[0])
+    size_y = len(matrix)
     
     return size_x, size_y
+
+def flat_to_matrix(flat_shape):
+    matrix = []
+    row = []
+    for val in flat_shape:
+        if val == -1:
+            matrix.append(row)
+            row = []
+        else:
+            row.append(val)
+    if row:
+        matrix.append(row)
+    return matrix
+
+def matrix_to_flat(matrix):
+    flat = []
+    for row in matrix:
+        flat.extend(row)
+        flat.append(-1)
+    flat.pop()  # Remove last -1
+    return flat
+
+def rotate_matrix_cw(matrix):
+    return [list(row) for row in zip(*matrix[::-1])]

@@ -13,7 +13,7 @@ class Grid():
         for y in range(self.grid_size[1]):
             for x in range(self.grid_size[0]):
                 grid_key = str(x) + ',' + str(y)
-                self.grid[grid_key] = {'pos': (x,y), 'active': 0, 'color': self.base_color}
+                self.grid[grid_key] = {'pos': (x,y), 'active': 0, 'color': self.base_color, 'in_use': False}
 
     def render(self):
         self.update()
@@ -32,6 +32,8 @@ class Grid():
                     coordinates = str(x_val) + ',' + str(y_val)
                     self.grid[coordinates]['color'] = cur_object['color'][1]
                     self.grid[coordinates]['active'] = 1
+                    self.grid[coordinates]['in_use'] = True
+                    #This is the problem
                 x_mod += 1
                 
 
@@ -55,9 +57,9 @@ class Grid():
             else:
                 value['active'] = 0
             
-            #print(type(tuple(key)))
     
     def set_piece(self, object):
+        object = self.game.active_object
         x_mod = 0
         y_mod = 0
         for i in range(len(object['shape'])):
@@ -71,12 +73,34 @@ class Grid():
                 coordinates = str(x_val) + ',' + str(y_val)
                 self.grid[coordinates]['color'] = object['color'][1]
                 self.grid[coordinates]['active'] = 1
+                self.grid[coordinates]['in_use'] = False
                 self.active_spaces.append(str(x_val) + ',' + str(y_val))
             x_mod += 1
 
+    #Clears any location in the grid and removes it from the active spaces
+    def clear_pixel(self, coordinate:str):
+        location = self.grid[coordinate]
+        location['active'] = 0
+        location['in_use'] = False
+        #print(self.active_spaces, location['pos'])
+        for x in range(0, len(self.active_spaces)):
+            print(coordinate == self.active_spaces[x])
+            if coordinate == self.active_spaces[x]:
+                print(coordinate, self.active_spaces)
+                self.active_spaces.pop(x)
+                return
+
+    #This clears the entire xlevel at any given y level
+    def clear_line(self, y_level):
+        for x in range(self.grid_size[0]):
+            coords = str(x) + ',' + str(y_level)
+            self.clear_pixel(coords)
+            print('Cleared coords ' + coords)
+        
 
     def clear_grid(self):
         for key, value in self.grid.items():
             #value['color'] = self.base_color
-            self.game.active_object = None
             value['active'] = 0
+            value['in_use'] = False
+            self.active_spaces.clear()

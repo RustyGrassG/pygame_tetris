@@ -3,7 +3,7 @@ import pygame
 import sys
 import random
 
-from scripts.utils import check_col
+from scripts.utils import flat_to_matrix, matrix_to_flat, get_size, rotate_matrix_cw
 from scripts.grid import Grid
 import scripts.entities as entities
 
@@ -50,18 +50,76 @@ class Game:
     #Made a def so it can be called more than once
     def get_piece(self, location, object):
         self.active_object = {'size': object['size'], 'shape': object['shape'], 'location': location, 'color': object['color']}
-        print(self.active_object['size'])
+        print(self.active_object['shape'])
 
-    def check_below(self, object):
-        for i in range(self.active_object['size'][0]):
-            tile_to_check = (self.active_object['location'][0] + i, self.active_object['location'][1] + self.active_object['size'][1])
-            if tile_to_check[1] < 20:
-                tile_to_check = str(tile_to_check[0]) + ',' + str(tile_to_check[1])
-                if self.grid.grid[tile_to_check]['active'] == 1:
+    #Checks the collision to the left of the piece. Is only called when the player presses the 'a' key
+    def check_left(self, object):
+        size = object['size']
+        location = object['location']
+        #Goes through each piece in the active object
+        for y in range(size[1]):
+            for x in range(size[0]):
+                #Sets the current coords of the active object segment
+                coords = [location[0] + x, location[1] + y]
+                if coords[0] - 1 < 0:
                     return False
-                else:
-                    continue
-            return True
+                if self.grid.grid[f'{coords[0]},{coords[1]}']['active'] == 1:
+                    if self.grid.grid[f'{coords[0] - 1},{coords[1]}']['active'] == 1 and not self.grid.grid[f'{coords[0] - 1},{coords[1]}']['in_use'] :
+                        print('Blocked')
+                        return False
+        return True
+
+    
+    #Checks the collision to the right of the piece. Is only called when the player presses the 'd' key
+    def check_right(self, object):
+        size = object['size']
+        location = object['location']
+        #Goes through each piece in the active object
+        for y in range(size[1]):
+            for x in range(size[0]):
+                #Sets the current coords of the active object segment
+                coords = [location[0] + x, location[1] + y]
+                if coords[0] + 1 > 9:
+                    return False
+                if self.grid.grid[f'{coords[0]},{coords[1]}']['active'] == 1:
+                    if self.grid.grid[f'{coords[0] + 1},{coords[1]}']['active'] == 1 and not self.grid.grid[f'{coords[0] + 1},{coords[1]}']['in_use'] :
+                        print('Blocked')
+                        return False
+        return True
+
+    #Checks the location below the tile to see if it can be set or not
+    def check_down(self, object) -> bool:
+        size = object['size']
+        #print(object['shape'])
+        location = object['location']
+        #Goes through each piece in the active object
+        for y in range(size[1]):
+            for x in range(size[0]):
+                #Sets the current coords of the active object segment
+                coords = [location[0] + x, location[1] + y]
+                #print(coords)
+                if coords[1] + 1 > 19:
+                    return True
+                if self.grid.grid[f'{coords[0]},{coords[1]}']['active'] == 1:
+                    if self.grid.grid[f'{coords[0]},{coords[1] + 1}']['active'] == 1 and not self.grid.grid[f'{coords[0]},{coords[1] + 1}']['in_use'] :
+                        print('Blocked')
+                        return True
+        
+        return False
+        
+
+    #This is a definition that rotates a piece
+    def rotate_piece(self, object):
+        matrix = flat_to_matrix(object['shape'])
+        rotated = rotate_matrix_cw(matrix)
+        flat = matrix_to_flat(rotated)
+        size = get_size(flat)
+        print(f'{size}')
+        if int(object['location'][0]) + size[0] > 9:
+            print('goes')
+            object['location'][0] += size[1] - size[0]
+        object['shape'] = flat
+        object['size'] = get_size(flat)
 
     def run(self):
         while True:
@@ -89,41 +147,37 @@ class Game:
                 
                 #Moves piece down by 1 after a given amount of time
                 if event.type == self.MOVE_DOWN_EVENT:
-                    if self.active_object['location'][1] + self.active_object['size'][1] <= 19:
-                            self.active_object['location'][1] += 1
-                            if not self.check_below(self.active_object):
-                                self.grid.set_piece(self.active_object)
-                                self.get_piece([4,0], entities.pick_piece())
-                    else:
+                    if self.check_down(self.active_object):
                         self.grid.set_piece(self.active_object)
                         self.get_piece([4,0], entities.pick_piece())
+                    else:
+                        self.active_object['location'][1] += 1
+                    
 
                 #Hadles movement
                 if event.type == pygame.KEYDOWN:
                     #Clears the board(Debug)
-                    if False:
-                        if event.key == pygame.K_w:
-                            print('clearing')
-                            self.grid.clear_grid()
+                    if event.key == pygame.K_x:
+                        print('clearing')
+                        self.grid.clear_line(19)
                     #Moves active piece left    
                     if event.key == pygame.K_a:
-                        if self.active_object['location'][0] - 1 >= 0:
+                        if self.check_left(self.active_object):
                             self.active_object['location'][0] -= 1
                     #Moves active piece right
                     if event.key == pygame.K_d:
-                        if self.active_object['location'][0] + self.active_object['size'][0] <= 9:
+                        if self.check_right(self.active_object):
                             self.active_object['location'][0] += 1
+                    #rotates piece
+                    if event.key == pygame.K_w:
+                        self.rotate_piece(self.active_object)
                     #Moves piece down at a faster rate
                     if event.key == pygame.K_s:
                         pygame.time.set_timer(self.MOVE_DOWN_EVENT, 100)
-                    #prints the grid
-                    if event.key == pygame.K_x:
-                        #print(self.grid.grid)
-                        check_col(self.active_object)
-                    
+                    #Sets the time back to normal speeds for pieces
                     if event.type == pygame.KEYUP:
                         if event.key == pygame.K_s:
-                            pygame.time.set_timer(self.MOVE_DOWN_EVENT, 1000)
+                            pygame.time.set_timer(self.MOVE_DOWN_EVENT, self.norm_speed)
             
 
             #if pygame.time.get_ticks == 60:

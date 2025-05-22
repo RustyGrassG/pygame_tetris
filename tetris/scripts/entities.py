@@ -11,7 +11,7 @@ pieces = {
                   1,-1,
                   1,],
             's': [0,1,1,-1,
-                  1,1],
+                  1,1,0],
             'z': [1,1,0,-1,
                   0,1,1],
             'l': [1,0,-1,
@@ -30,6 +30,8 @@ def pick_piece():
               'red': (255,0,0),
               'green': (0,255,0),
               'blue': (0,0,255),
+              'purple': (255,0,255),
+              'orange': (255, 100, 0)
               }
     piece = pieces[random.choice(options)]
     size = get_size(piece)
