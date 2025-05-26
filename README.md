@@ -4,18 +4,18 @@ This is a custom made tetris game using only pygame code. The idea is to then tr
 Tetris works for the most part. I am still working out some bugs.
 
 CONTROLS:
-W - Rotate clockwise 90 degrees
-A - Moves active piece left
-D - Moves active piece right
-S - Moves active piece down at a faster rate
-X - Clears grid(keeps score and level). IF GAME OVER, resets the game
+- W - Rotate clockwise 90 degrees
+- A - Moves active piece left
+- D - Moves active piece right
+- S - Moves active piece down at a faster rate
+- X - Clears grid(keeps score and level). IF GAME OVER, resets the game
 
 BUGS:
-'i' and 'j' pieces will not collide correctly when rotated by 180 degrees
+- 'i' and 'j' pieces will not collide correctly when rotated by 180 degrees
 
-The game will crash if you rotate a piece too low to the ground(If its ending rotation goes beyong the grid size)
+- The game will crash if you rotate a piece too low to the ground(If its ending rotation goes beyong the grid size)
 
-You can rotate the pieces into other pieces on the grid
+- You can rotate the pieces into other pieces on the grid
 
 Future Update plans:
 - Fix the 'i' and 'j' collision issues
