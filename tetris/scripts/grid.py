@@ -42,7 +42,6 @@ class Grid():
                 color = self.base_color
             else:
                 if self.grid[key] in self.active_spaces:
-                    print('Its here!')
                     color = (255,0,255)
                 color = self.grid[key]['color']
             loc = self.grid[key]['pos']
@@ -76,31 +75,81 @@ class Grid():
                 self.grid[coordinates]['in_use'] = False
                 self.active_spaces.append(str(x_val) + ',' + str(y_val))
             x_mod += 1
+        self.check_completed()
+    
+    #This checks the completed lines on the tetris board, stores them, then called the 'clear line'
+    #Function for each cleared line
+    #THIS SHOULD ONLY BE CALLED AFTER A PIECE IS SET
+    def check_completed(self):
+        #Only needs the y-value inserted into the list
+        completed_lines = []
+        #Next i need to iterate through each row and see if the line is cleared
+        for y in range(self.grid_size[1]):
+            is_completed = True
+            for x in range(self.grid_size[0]):
+                coords = str(x) + ',' + str(y)
+                if self.grid[coords]['active'] == 0:
+                    is_completed = False
+            if is_completed:
+                self.clear_line(y)
+                completed_lines.append(y)
+        if len(completed_lines) > 0:
+            self.lower_top(completed_lines)
+            self.game.add_score(len(completed_lines))
+
+    def lower_top(self, lines:list):
+        lines = sorted(lines)
+
+        num_cleared_below = 0
+
+        for target_y in range(self.grid_size[1] - 1, -1, -1):
+            if target_y in lines:
+                num_cleared_below += 1
+                continue
+
+            new_y = target_y + num_cleared_below
+
+            for x in range(self.grid_size[0]):
+                from_coords = f"{x},{target_y}"
+                to_coords = f"{x},{new_y}"
+
+                self.grid[to_coords]['active'] = self.grid[from_coords]['active']
+                self.grid[to_coords]['color'] = self.grid[from_coords]['color']
+                self.grid[to_coords]['in_use'] = self.grid[from_coords]['in_use']
+
+                if from_coords in self.active_spaces:
+                    self.active_spaces.append(to_coords)
+                    self.active_spaces.remove(from_coords)
+                    
+            for y in range(num_cleared_below):
+                for x in range(self.grid_size[0]):
+                    top_coords = f'{x},{y}'
+                    self.grid[top_coords]['active'] = 0
+                    self.grid[top_coords]['color'] = self.base_color
+                    self.grid[top_coords]['in_use'] = False
+                    if top_coords in self.active_spaces:
+                        self.active_spaces.remove(top_coords)
+
 
     #Clears any location in the grid and removes it from the active spaces
     def clear_pixel(self, coordinate:str):
         location = self.grid[coordinate]
         location['active'] = 0
         location['in_use'] = False
-        #print(self.active_spaces, location['pos'])
         for x in range(0, len(self.active_spaces)):
-            print(coordinate == self.active_spaces[x])
             if coordinate == self.active_spaces[x]:
-                print(coordinate, self.active_spaces)
                 self.active_spaces.pop(x)
                 return
 
     #This clears the entire xlevel at any given y level
-    def clear_line(self, y_level):
+    def clear_line(self, y_level:int):
         for x in range(self.grid_size[0]):
             coords = str(x) + ',' + str(y_level)
             self.clear_pixel(coords)
-            print('Cleared coords ' + coords)
         
 
     def clear_grid(self):
         for key, value in self.grid.items():
-            #value['color'] = self.base_color
             value['active'] = 0
             value['in_use'] = False
             self.active_spaces.clear()
